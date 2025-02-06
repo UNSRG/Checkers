@@ -130,51 +130,51 @@ private:
     double find_best_turns_rec(vector<vector<POS_T>> mtx, const bool color, const size_t depth, double alpha = -1,
         double beta = INF + 1, const POS_T x = -1, const POS_T y = -1)
     {
-        if (depth == Max_depth)
+        if (depth == Max_depth) // Если достигнута максимальная глубина поиска
         {
-            return calc_score(mtx, (depth % 2 == color));
+            return calc_score(mtx, (depth % 2 == color)); // Возвращаем оценку текущего состояния доски
         }
-        if (x != -1)
+        if (x != -1) // Возвращаем оценку текущего состояния доски
         {
-            find_turns(x, y, mtx);
+            find_turns(x, y, mtx);  // Находим все возможные ходы для этой фигуры
         }
         else
-            find_turns(color, mtx);
-        auto turns_now = turns;
-        bool have_beats_now = have_beats;
+            find_turns(color, mtx); // Находим все возможные ходы для текущего цвета
+        auto turns_now = turns; // Сохраняем найденные ходы
+        bool have_beats_now = have_beats; // Сохраняем флаг наличия взятий
 
-        if (!have_beats_now && x != -1)
+        if (!have_beats_now && x != -1) // Если нет взятий и заданы координаты фигуры
         {
-            return find_best_turns_rec(mtx, 1 - color, depth + 1, alpha, beta);
+            return find_best_turns_rec(mtx, 1 - color, depth + 1, alpha, beta); // Рекурсивно вызываем функцию для следующего игрока
         }
 
-        if (turns.empty())
-            return (depth % 2 ? 0 : INF);
+        if (turns.empty()) // Если нет доступных ходов
+            return (depth % 2 ? 0 : INF); // Возвращаем значение в зависимости от текущего игрока
 
-        double min_score = INF + 1;
-        double max_score = -1;
-        for (auto turn : turns_now)
+        double min_score = INF + 1; // Инициализируем минимальную оценку большим значением
+        double max_score = -1; // Инициализируем максимальную оценку малым значением
+        for (auto turn : turns_now) // Проходим по всем доступным хода
         {
-            double score = 0.0;
-            if (!have_beats_now && x == -1)
+            double score = 0.0; // Инициализируем оценку текущего хода
+            if (!have_beats_now && x == -1) // Если нет взятий и не заданы координаты фигуры
             {
-                score = find_best_turns_rec(make_turn(mtx, turn), 1 - color, depth + 1, alpha, beta);
+                score = find_best_turns_rec(make_turn(mtx, turn), 1 - color, depth + 1, alpha, beta);  // Рекурсивно вызываем функцию для следующего игрока
             }
             else
             {
-                score = find_best_turns_rec(make_turn(mtx, turn), color, depth, alpha, beta, turn.x2, turn.y2);
+                score = find_best_turns_rec(make_turn(mtx, turn), color, depth, alpha, beta, turn.x2, turn.y2); // Рекурсивно вызываем функцию для текущего игрока
             }
-            min_score = min(min_score, score);
-            max_score = max(max_score, score);
+            min_score = min(min_score, score); // Обновляем минимальную оценку
+            max_score = max(max_score, score); // Обновляем максимальную оценку
             // alpha-beta pruning
-            if (depth % 2)
-                alpha = max(alpha, max_score);
+            if (depth % 2)  // Если текущий игрок максимизирующий
+                alpha = max(alpha, max_score); // Обновляем альфа
             else
-                beta = min(beta, min_score);
-            if (optimization != "O0" && alpha >= beta)
-                return (depth % 2 ? max_score + 1 : min_score - 1);
+                beta = min(beta, min_score); // Обновляем бета
+            if (optimization != "O0" && alpha >= beta) // Если включена оптимизация и альфа больше или равно бета
+                return (depth % 2 ? max_score + 1 : min_score - 1); // Прерываем поиск и возвращаем результат
         }
-        return (depth % 2 ? max_score : min_score);
+        return (depth % 2 ? max_score : min_score); // Возвращаем результат в зависимости от текущего игрока
     }
 
 public:
