@@ -18,23 +18,9 @@ public:
         scoring_mode = (*config)("Bot", "BotScoringType");
         optimization = (*config)("Bot", "Optimization");
     }
-
+    // Удалена реализация функции find_best_turns()
     vector<move_pos> find_best_turns(const bool color)
-    {
-        next_best_state.clear();
-        next_move.clear();
-
-        find_first_best_turn(board->get_board(), color, -1, -1, 0);
-
-        int cur_state = 0;
-        vector<move_pos> res;
-        do
-        {
-            res.push_back(next_move[cur_state]);
-            cur_state = next_best_state[cur_state];
-        } while (cur_state != -1 && next_move[cur_state].x != -1);
-        return res;
-    }
+  
 
 private:
     // Функция для выполнения хода на доске
@@ -85,98 +71,14 @@ private:
         }
         return (b + bq * q_coef) / (w + wq * q_coef); // Возвращаем оценку текущего состояния доски
     }
-
+    // Удалена реализация функции find_best_turn()
     double find_first_best_turn(vector<vector<POS_T>> mtx, const bool color, const POS_T x, const POS_T y, size_t state,
         double alpha = -1)
-    {
-        next_best_state.push_back(-1);
-        next_move.emplace_back(-1, -1, -1, -1);
-        double best_score = -1;
-        if (state != 0)
-            find_turns(x, y, mtx);
-        auto turns_now = turns;
-        bool have_beats_now = have_beats;
-
-        if (!have_beats_now && state != 0)
-        {
-            return find_best_turns_rec(mtx, 1 - color, 0, alpha);
-        }
-
-        vector<move_pos> best_moves;
-        vector<int> best_states;
-
-        for (auto turn : turns_now)
-        {
-            size_t next_state = next_move.size();
-            double score;
-            if (have_beats_now)
-            {
-                score = find_first_best_turn(make_turn(mtx, turn), color, turn.x2, turn.y2, next_state, best_score);
-            }
-            else
-            {
-                score = find_best_turns_rec(make_turn(mtx, turn), 1 - color, 0, best_score);
-            }
-            if (score > best_score)
-            {
-                best_score = score;
-                next_best_state[state] = (have_beats_now ? int(next_state) : -1);
-                next_move[state] = turn;
-            }
-        }
-        return best_score;
-    }
-
+    
+    // Удалена реализация функции find_best_turns_rec()
     double find_best_turns_rec(vector<vector<POS_T>> mtx, const bool color, const size_t depth, double alpha = -1,
         double beta = INF + 1, const POS_T x = -1, const POS_T y = -1)
-    {
-        if (depth == Max_depth) // Если достигнута максимальная глубина поиска
-        {
-            return calc_score(mtx, (depth % 2 == color)); // Возвращаем оценку текущего состояния доски
-        }
-        if (x != -1) // Возвращаем оценку текущего состояния доски
-        {
-            find_turns(x, y, mtx);  // Находим все возможные ходы для этой фигуры
-        }
-        else
-            find_turns(color, mtx); // Находим все возможные ходы для текущего цвета
-        auto turns_now = turns; // Сохраняем найденные ходы
-        bool have_beats_now = have_beats; // Сохраняем флаг наличия взятий
-
-        if (!have_beats_now && x != -1) // Если нет взятий и заданы координаты фигуры
-        {
-            return find_best_turns_rec(mtx, 1 - color, depth + 1, alpha, beta); // Рекурсивно вызываем функцию для следующего игрока
-        }
-
-        if (turns.empty()) // Если нет доступных ходов
-            return (depth % 2 ? 0 : INF); // Возвращаем значение в зависимости от текущего игрока
-
-        double min_score = INF + 1; // Инициализируем минимальную оценку большим значением
-        double max_score = -1; // Инициализируем максимальную оценку малым значением
-        for (auto turn : turns_now) // Проходим по всем доступным хода
-        {
-            double score = 0.0; // Инициализируем оценку текущего хода
-            if (!have_beats_now && x == -1) // Если нет взятий и не заданы координаты фигуры
-            {
-                score = find_best_turns_rec(make_turn(mtx, turn), 1 - color, depth + 1, alpha, beta);  // Рекурсивно вызываем функцию для следующего игрока
-            }
-            else
-            {
-                score = find_best_turns_rec(make_turn(mtx, turn), color, depth, alpha, beta, turn.x2, turn.y2); // Рекурсивно вызываем функцию для текущего игрока
-            }
-            min_score = min(min_score, score); // Обновляем минимальную оценку
-            max_score = max(max_score, score); // Обновляем максимальную оценку
-            // alpha-beta pruning
-            if (depth % 2)  // Если текущий игрок максимизирующий
-                alpha = max(alpha, max_score); // Обновляем альфа
-            else
-                beta = min(beta, min_score); // Обновляем бета
-            if (optimization != "O0" && alpha >= beta) // Если включена оптимизация и альфа больше или равно бета
-                return (depth % 2 ? max_score + 1 : min_score - 1); // Прерываем поиск и возвращаем результат
-        }
-        return (depth % 2 ? max_score : min_score); // Возвращаем результат в зависимости от текущего игрока
-    }
-
+    
 public:
     // Нахождение всех возможных ходов для заданного цвета на текущей доске
     void find_turns(const bool color)
