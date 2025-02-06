@@ -8,12 +8,12 @@ using json = nlohmann::json;
 class Config
 {
   public:
-    Config()
+    Config() // Конструктор класса Config.
     {
-        reload();
+        reload(); // Вызов метода reload() при создании объекта для загрузки начальной конфигурации.
     }
 
-    void reload()
+    void reload() // Метод для перезагрузки конфигурационных данных из файла.
     {
         std::ifstream fin(project_path + "settings.json");
         fin >> config;
@@ -22,7 +22,8 @@ class Config
 
     auto operator()(const string &setting_dir, const string &setting_name) const
     {
-        return config[setting_dir][setting_name];
+       // Этот оператор позволяет использовать объект класса Config как функцию для получения значений из конфигурационного файла.
+       return config[setting_dir][setting_name];
     }
 
   private:

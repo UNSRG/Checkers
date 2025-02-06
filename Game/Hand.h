@@ -6,97 +6,101 @@
 #include "Board.h"
 
 // methods for hands
+// Класс Hand отвечает за обработку ввода игрока (клик мыши, закрытие окна и т.д.)
 class Hand
 {
   public:
     Hand(Board *board) : board(board)
     {
     }
+    // Метод для получения выбранной ячейки на доске
     tuple<Response, POS_T, POS_T> get_cell() const
     {
-        SDL_Event windowEvent;
-        Response resp = Response::OK;
-        int x = -1, y = -1;
-        int xc = -1, yc = -1;
-        while (true)
+        SDL_Event windowEvent;  // Структура для хранения событий SDL
+        Response resp = Response::OK; // Переменная для хранения типа ответа
+        int x = -1, y = -1; // Координаты клика мыши
+        int xc = -1, yc = -1; // Вычисленные координаты клетки на доске
+        while (true) // Бесконечный цикл для ожидания события
         {
-            if (SDL_PollEvent(&windowEvent))
+            if (SDL_PollEvent(&windowEvent)) // Проверяем наличие нового события
             {
-                switch (windowEvent.type)
+                switch (windowEvent.type) // Обрабатываем тип события
                 {
-                case SDL_QUIT:
-                    resp = Response::QUIT;
+                case SDL_QUIT: // Если игрок закрыл окно
+                    resp = Response::QUIT; // Устанавливаем ответ QUIT
                     break;
-                case SDL_MOUSEBUTTONDOWN:
-                    x = windowEvent.motion.x;
-                    y = windowEvent.motion.y;
-                    xc = int(y / (board->H / 10) - 1);
-                    yc = int(x / (board->W / 10) - 1);
+                case SDL_MOUSEBUTTONDOWN:  // Если игрок нажал кнопку мыши
+                    x = windowEvent.motion.x; // Получаем координату X клика
+                    y = windowEvent.motion.y; // Получаем координату Y клика
+                    xc = int(y / (board->H / 10) - 1); // Вычисляем координату X клетки на доске
+                    yc = int(x / (board->W / 10) - 1); // Вычисляем координату Y клетки на доске
+                    // Обработка специальных клеток для отката хода и повторной игры
                     if (xc == -1 && yc == -1 && board->history_mtx.size() > 1)
                     {
-                        resp = Response::BACK;
+                        resp = Response::BACK; // Устанавливаем ответ BACK (откат хода)
                     }
                     else if (xc == -1 && yc == 8)
                     {
-                        resp = Response::REPLAY;
+                        resp = Response::REPLAY; // Устанавливаем ответ REPLAY (повторная игра)
                     }
                     else if (xc >= 0 && xc < 8 && yc >= 0 && yc < 8)
                     {
-                        resp = Response::CELL;
+                        resp = Response::CELL; // Устанавливаем ответ CELL (выбор клетки)
                     }
                     else
                     {
-                        xc = -1;
+                        xc = -1; // Сбрасываем координаты, если они некорректны
                         yc = -1;
                     }
                     break;
-                case SDL_WINDOWEVENT:
-                    if (windowEvent.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                case SDL_WINDOWEVENT: // Обработка событий окна
+                    if (windowEvent.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) // Если размер окна изменился
                     {
-                        board->reset_window_size();
+                        board->reset_window_size(); // Сбрасываем размер окна
                         break;
                     }
                 }
-                if (resp != Response::OK)
+                if (resp != Response::OK) // Если ответ не равен OK, выходим из цикла
                     break;
             }
         }
-        return {resp, xc, yc};
+        return {resp, xc, yc}; // Возвращаем ответ и координаты клетки
     }
-
+    // Метод для ожидания действия игрока (например, выбора повторной игры)
     Response wait() const
     {
-        SDL_Event windowEvent;
-        Response resp = Response::OK;
-        while (true)
+        SDL_Event windowEvent; // Структура для хранения событий SDL
+        Response resp = Response::OK; // Переменная для хранения типа ответа
+        while (true) // Бесконечный цикл для ожидания события
         {
-            if (SDL_PollEvent(&windowEvent))
+            if (SDL_PollEvent(&windowEvent)) // Проверяем наличие нового события
             {
-                switch (windowEvent.type)
+                switch (windowEvent.type) // Обрабатываем тип события
                 {
-                case SDL_QUIT:
-                    resp = Response::QUIT;
+                case SDL_QUIT: // Если игрок закрыл окно
+                    resp = Response::QUIT; // Устанавливаем ответ QUIT
                     break;
-                case SDL_WINDOWEVENT_SIZE_CHANGED:
-                    board->reset_window_size();
+                case SDL_WINDOWEVENT_SIZE_CHANGED: // Если размер окна изменился
+                    board->reset_window_size(); // Сбрасываем размер окна
                     break;
-                case SDL_MOUSEBUTTONDOWN: {
-                    int x = windowEvent.motion.x;
-                    int y = windowEvent.motion.y;
-                    int xc = int(y / (board->H / 10) - 1);
-                    int yc = int(x / (board->W / 10) - 1);
-                    if (xc == -1 && yc == 8)
-                        resp = Response::REPLAY;
+                case SDL_MOUSEBUTTONDOWN: // Если игрок нажал кнопку мыши
+                { 
+                    int x = windowEvent.motion.x; // Получаем координату X клика
+                    int y = windowEvent.motion.y; // Получаем координату Y клика
+                    int xc = int(y / (board->H / 10) - 1); // Вычисляем координату X клетки на доске
+                    int yc = int(x / (board->W / 10) - 1); // Вычисляем координату Y клетки на доске
+                    if (xc == -1 && yc == 8) // Обработка специальной клетки для повторной игры
+                        resp = Response::REPLAY; // Устанавливаем ответ REPLAY
                 }
                 break;
                 }
-                if (resp != Response::OK)
+                if (resp != Response::OK) // Если ответ не равен OK, выходим из цикла
                     break;
             }
         }
-        return resp;
+        return resp; // Возвращаем ответ
     }
 
   private:
-    Board *board;
+    Board *board; // Указатель на объект доски
 };
